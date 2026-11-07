@@ -1,0 +1,4 @@
+/bin/
+/tripwire
+*.exe
+*.test
