@@ -2,7 +2,7 @@
 [x] Hash a small file with the known digest for "abc"
 [x] Return an error for a missing file
 [x] Hash a directory tree and return a map of relative path to digest
-[ ] read a json config file of files/directories to monitor
+[x] read a json config file of files/directories to monitor
 [ ] Save a baseline to sqllite and load it back unchanged
 [ ] Report a file as modified when its digest changes
 [ ] Report a file as added or removed
