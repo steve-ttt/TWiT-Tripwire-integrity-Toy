@@ -1,0 +1,5 @@
+{
+    "database": "/root/tripwire.db",
+    "scan_dirs": ["/etc", "/path/to/dir2"],
+    "scan_files": ["/boot/grub2/grub.cfg", "/path/to/file2"]
+}

@@ -8,8 +8,7 @@ func TestConfigStruct(t *testing.T) {
 	in := []byte(`{
 		"database": "test.db",
 		"scan_dirs": ["/path/to/dir1", "/path/to/dir2"],
-		"scan_files": ["/path/to/file1", "/path/to/file2"],
-		"scan_interval": 10
+		"scan_files": ["/path/to/file1", "/path/to/file2"]
 	}`)
 
 	got, err := readConfig(in)
@@ -26,7 +25,5 @@ func TestConfigStruct(t *testing.T) {
 	if len(got.ScanFiles) != 2 || got.ScanFiles[0] != "/path/to/file1" || got.ScanFiles[1] != "/path/to/file2" {
 		t.Errorf("ScanFiles = %v, want [%q, %q]", got.ScanFiles, "/path/to/file1", "/path/to/file2")
 	}
-	if got.ScanInterval != 10 {
-		t.Errorf("ScanInterval = %d, want %d", got.ScanInterval, 10)
-	}
+
 }

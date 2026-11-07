@@ -29,7 +29,7 @@ func hashTree(root string) (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
+		if info.Mode().IsRegular() { // ignore directories and non-regular files (ie. symlinks, sockets, etc.)
 			hash, err := hashFile(path)
 			if err != nil {
 				return err

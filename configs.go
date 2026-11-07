@@ -6,10 +6,9 @@ import (
 )
 
 type Config struct {
-	Database     string   `json:"database"`
-	ScanDirs     []string `json:"scan_dirs"`
-	ScanFiles    []string `json:"scan_files"`
-	ScanInterval int      `json:"scan_interval"`
+	Database  string   `json:"database"`
+	ScanDirs  []string `json:"scan_dirs"`
+	ScanFiles []string `json:"scan_files"`
 }
 
 // os.ReadFile("config.json") returns ([]byte, error)
@@ -18,7 +17,6 @@ func readConfig(data []byte) (Config, error) {
 	err := json.Unmarshal(data, &config)
 	if err != nil {
 		log.Fatal(err)
-		panic(err)
 	}
 	return config, nil
 }
