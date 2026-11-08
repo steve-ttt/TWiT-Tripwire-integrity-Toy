@@ -3,7 +3,8 @@
 [x] Return an error for a missing file
 [x] Hash a directory tree and return a map of relative path to digest
 [x] read a json config file of files/directories to monitor
-[ ] Save a baseline to sqllite and load it back unchanged
+[x] create a database to perform CRUD on the hashes for the system files
+[x] Save a baseline to sqllite and load it back unchanged
 [ ] Report a file as modified when its digest changes
 [ ] Report a file as added or removed
 [ ] Report a permission or owner change
