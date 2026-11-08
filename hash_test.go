@@ -6,6 +6,40 @@ import (
 	"testing"
 )
 
+func setupTestTree(t *testing.T) (string, map[string]string) {
+	t.Helper() // tells Go to report line numbers from the caller if a step fails
+
+	dir := t.TempDir()
+
+	subDir := filepath.Join(dir, "subdir")
+	if err := os.Mkdir(subDir, 0o700); err != nil {
+		t.Fatalf("failed to create subdir: %v", err)
+	}
+
+	file1Path := filepath.Join(dir, "file1.txt")
+	if err := os.WriteFile(file1Path, []byte("file1 content"), 0o600); err != nil {
+		t.Fatalf("failed to create file1: %v", err)
+	}
+
+	file2Path := filepath.Join(dir, "file2.txt")
+	if err := os.WriteFile(file2Path, []byte("file2 content"), 0o600); err != nil {
+		t.Fatalf("failed to create file2: %v", err)
+	}
+
+	subFilePath := filepath.Join(subDir, "subfile.txt")
+	if err := os.WriteFile(subFilePath, []byte("subfile content"), 0o600); err != nil {
+		t.Fatalf("failed to create subfile: %v", err)
+	}
+
+	expectedFiles := map[string]string{
+		file1Path:   "1705789d380ee110bc09231df8af42a0cc564a1510ebd2168516d4985c40a263",
+		file2Path:   "69d21bef329d53a0f62bf6f19faab99eab3dac4d53e43fbbb257fee4d14f60ab",
+		subFilePath: "f53617a5043bff46ec5fac4874d9cd0fc8bd50b57620488597ed630a41976e58",
+	}
+
+	return dir, expectedFiles
+}
+
 func TestHashFile(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -52,41 +86,14 @@ func TestHashFileNotFound(t *testing.T) {
 }
 
 func TestHashTree(t *testing.T) {
-	dir := t.TempDir() // automatically removed when TestHashTree finishes
+	dir, expectedFiles := setupTestTree(t)
 
-	// Create a simple directory structure
-	subDir := filepath.Join(dir, "subdir")
-	if err := os.Mkdir(subDir, 0o700); err != nil {
-		t.Fatalf("failed to create subdir: %v", err)
-	}
-	// Create files in the root directory
-	file1Path := filepath.Join(dir, "file1.txt")
-	if err := os.WriteFile(file1Path, []byte("file1 content"), 0o600); err != nil {
-		t.Fatalf("failed to create file1: %v", err)
-	}
-	file2Path := filepath.Join(dir, "file2.txt")
-	if err := os.WriteFile(file2Path, []byte("file2 content"), 0o600); err != nil {
-		t.Fatalf("failed to create file2: %v", err)
-	}
-	// Create a file in the subdirectory
-	subFilePath := filepath.Join(subDir, "subfile.txt")
-	if err := os.WriteFile(subFilePath, []byte("subfile content"), 0o600); err != nil {
-		t.Fatalf("failed to create subfile: %v", err)
-	}
-
-	hashes, err := hashTree(dir)
-	if err != nil || hashes == nil {
+	gotHashes, err := hashTree(dir)
+	if err != nil || gotHashes == nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Check that the hashes map contains the expected files and their hashes
-	expectedFiles := map[string]string{
-		file1Path:   "1705789d380ee110bc09231df8af42a0cc564a1510ebd2168516d4985c40a263",
-		file2Path:   "69d21bef329d53a0f62bf6f19faab99eab3dac4d53e43fbbb257fee4d14f60ab",
-		subFilePath: "f53617a5043bff46ec5fac4874d9cd0fc8bd50b57620488597ed630a41976e58",
-	}
-
-	for path, hash := range hashes {
+	for path, hash := range gotHashes {
 		expectedhash, ok := expectedFiles[path]
 		if !ok {
 			t.Errorf("unexpected file in hashes: %s", path)
@@ -96,5 +103,4 @@ func TestHashTree(t *testing.T) {
 			t.Errorf("hash for %s: got %q, want %q", path, hash, expectedhash)
 		}
 	}
-
 }
