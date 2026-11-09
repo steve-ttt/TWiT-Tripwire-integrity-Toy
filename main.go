@@ -1,4 +1,4 @@
-package tripwire
+package main
 
 import (
 	"fmt"
@@ -6,17 +6,18 @@ import (
 	"os"
 )
 
-func checkBaseline(config Config) {
-	// TDD Stub
-}
+const (
+	RED   = "\033[31m"
+	GREEN = "\033[32m"
+	RESET = "\033[0m"
+)
 
-func updateBaseline(config Config, currentDataBase map[string]string) {
+func scanDirsAndFiles(config Config) (map[string]string, error) {
 	scanResult := make(map[string]string)
 	for _, dir := range config.ScanDirs {
-		// append the scan result to the scanResult map
 		dirScanResult, err := hashTree(dir)
 		if err != nil {
-			log.Fatalf("failed to scan directory %s: %v", dir, err)
+			return nil, fmt.Errorf("failed to scan directory %s: %v", dir, err)
 		}
 		for path, hash := range dirScanResult {
 			scanResult[path] = hash
@@ -25,23 +26,67 @@ func updateBaseline(config Config, currentDataBase map[string]string) {
 
 	for _, file := range config.ScanFiles {
 		fileHash, err := hashFile(file)
-		scanResult[file] = fileHash
 		if err != nil {
-			log.Fatalf("failed to scan file %s: %v", file, err)
+			return nil, fmt.Errorf("failed to scan file %s: %v", file, err)
+		}
+		scanResult[file] = fileHash
+	}
+
+	return scanResult, nil
+}
+
+func checkBaseline(config Config) bool {
+	currentDataBase, err := loadBaseline(config.Database)
+	if err != nil {
+		log.Fatalf("failed to load baseline (run --update first): %v", err)
+	}
+	integretyFailed := false
+	scanResult, err := scanDirsAndFiles(config)
+	if err != nil {
+		log.Fatal("failed to scan directories and files")
+	}
+	for path, hash := range scanResult {
+		if currentHash, ok := currentDataBase[path]; !ok {
+			integretyFailed = true
+			log.Printf("New Unknown file: %s", path)
+			fmt.Printf("New Unknown file: %s\n", path)
+		} else if currentHash != hash {
+			integretyFailed = true
+			log.Printf("File changed: %s", path)
+			fmt.Printf("File changed: %s\n", path)
 		}
 	}
-	// check if there are any unknown files in the database that are not in the current scan result
-	// This is a naive check we will delete the entry from the database if it is not in the current scan result.
-	// and log the unknown file to the log file and console.
+	// check if there are any files in the database that are not in the current scan result
 	for path := range currentDataBase {
 		if _, ok := scanResult[path]; !ok {
-			log.Printf("Unknown file: %s", path)
-			fmt.Printf("Unknown file: %s\n", path)
+			integretyFailed = true
+			log.Printf("Deleted file: %s", path)
+			fmt.Printf("Deleted file: %s\n", path)
+		}
+	}
+	return integretyFailed
+
+}
+
+func updateBaseline(config Config) {
+	scanResult, err := scanDirsAndFiles(config)
+	if err != nil {
+		log.Fatal("failed to scan directories and files")
+	}
+	// check if there are any files in the database that are not in the current scan result
+	// This is a naive check we will delete the entry from the database if it is not in the current scan result.
+	// and log the unknown file to the log file and console.
+	// Only compare against previous baseline if the DB file already exists
+	if currentDataBase, err := loadBaseline(config.Database); err == nil {
+		for path := range currentDataBase {
+			if _, ok := scanResult[path]; !ok {
+				log.Printf("Deleted file: %s", path)
+				fmt.Printf("Deleted file: %s\n", path)
+			}
 		}
 	}
 
-	err := saveBaseline(config.Database, scanResult)
-	if err != nil {
+	if err = saveBaseline(config.Database, scanResult); err != nil {
 		log.Fatalf("failed to save baseline: %v", err)
 	}
 
@@ -68,16 +113,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	currentDataBase, err := loadBaseline(config.Database)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	switch os.Args[1] {
 	case "--check":
-		checkBaseline(config)
+		integretyFailed := checkBaseline(config)
+		fmt.Println("==================================")
+		if integretyFailed {
+			fmt.Println(RED + "Integrity check failed." + RESET)
+		} else {
+			fmt.Println(GREEN + "Integrity check passed." + RESET)
+		}
+		fmt.Println("==================================")
 	case "--update":
-		updateBaseline(config, currentDataBase)
+		updateBaseline(config)
 	case "--help":
 		fmt.Println("Usage: tripwire --check|--update [--config <file>]")
 		fmt.Println("Default config file: /root/tripwire.json")

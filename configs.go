@@ -1,4 +1,4 @@
-package tripwire
+package main
 
 import (
 	"encoding/json"

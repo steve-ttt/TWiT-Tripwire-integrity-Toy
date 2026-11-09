@@ -1,4 +1,4 @@
-package tripwire
+package main
 
 import (
 	"database/sql"
