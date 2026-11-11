@@ -43,7 +43,7 @@ func checkBaseline(config Config) bool {
 	integretyFailed := false
 	scanResult, err := scanDirsAndFiles(config)
 	if err != nil {
-		log.Fatal("failed to scan directories and files")
+		log.Fatal("failed to scan directories and files: " + err.Error())
 	}
 	for path, hash := range scanResult {
 		if currentHash, ok := currentDataBase[path]; !ok {
@@ -71,7 +71,7 @@ func checkBaseline(config Config) bool {
 func updateBaseline(config Config) {
 	scanResult, err := scanDirsAndFiles(config)
 	if err != nil {
-		log.Fatal("failed to scan directories and files")
+		log.Fatal("failed to scan directories and files: " + err.Error())
 	}
 	// check if there are any files in the database that are not in the current scan result
 	// This is a naive check we will delete the entry from the database if it is not in the current scan result.

@@ -1,10 +1,12 @@
 # Trip Wire integrity Toy - TWiT 
 
-A lightweight file integrity monitoring (FIM) tool written in Go. `tripWire` computes SHA-256 hashes of configured files and directory trees, stores a known-good baseline in a local SQLite database, and alerts on unauthorized file additions, modifications, or deletions.
+## ! Warning this is a toy it is not suitable for production !
+
+A TOY file integrity monitoring (FIM) tool written in Go. `tripWire` computes SHA-256 hashes of configured files and directory trees, stores a known-good baseline in a local SQLite database, and alerts on unauthorized file additions, modifications, or deletions.
 
 ## But Why ?
 
-This is a toy implementation to learn how the unix/linux open source tool TripWire works under the hood. Also I wanted to practice GO-lang, because reasons 🤔 
+This is a toy implementation to learn how the unix/linux open source tool TripWire works under the hood. Also I wanted to practice GO-lang and TDD, because reasons 🤔 
 Lastly, of course for fun !
 
 ## Features
