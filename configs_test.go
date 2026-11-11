@@ -27,3 +27,10 @@ func TestConfigStruct(t *testing.T) {
 	}
 
 }
+
+func TestReadConfigInvalidJSON(t *testing.T) {
+	_, err := readConfig([]byte(`{invalid json`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON, got nil")
+	}
+}

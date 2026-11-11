@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -23,19 +24,17 @@ func hashFile(path string) (string, error) {
 }
 
 func hashTree(root string) (map[string]string, error) {
-	// TDD stub
 	hashes := make(map[string]string)
-	e := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	e := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.Mode().IsRegular() { // ignore directories and non-regular files (ie. symlinks, sockets, etc.)
+		if d.Type().IsRegular() { // ignore directories and non-regular files (ie. symlinks, sockets, etc.)
 			hash, err := hashFile(path)
 			if err != nil {
 				return err
 			}
 			hashes[path] = hash
-			// fmt.Printf("File: %s, Hash: %s\n", path, hash)
 		}
 		return nil
 	})

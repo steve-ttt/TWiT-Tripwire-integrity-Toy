@@ -60,3 +60,37 @@ func TestSaveAndLoadBaseline(t *testing.T) {
 		}
 	}
 }
+
+func TestSaveBaselineRemovesDeletedFiles(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "test.db")
+
+	initial := map[string]string{
+		"/etc/passwd": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		"/etc/hosts":  "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+	}
+
+	if err := saveBaseline(dbPath, initial); err != nil {
+		t.Fatalf("initial saveBaseline failed: %v", err)
+	}
+
+	// Simulate /etc/hosts being deleted before a second saveBaseline
+	updated := map[string]string{
+		"/etc/passwd": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+	}
+
+	if err := saveBaseline(dbPath, updated); err != nil {
+		t.Fatalf("updated saveBaseline failed: %v", err)
+	}
+
+	got, err := loadBaseline(dbPath)
+	if err != nil {
+		t.Fatalf("loadBaseline failed: %v", err)
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("Expected 1 entry after deletion, got %d: %v", len(got), got)
+	}
+	if _, exists := got["/etc/hosts"]; exists {
+		t.Errorf("Expected deleted file /etc/hosts to be removed from baseline, but it still exists")
+	}
+}

@@ -22,6 +22,7 @@ func createDatabase(dbPath string) (*sql.DB, error) {
 
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -29,29 +30,34 @@ func createDatabase(dbPath string) (*sql.DB, error) {
 }
 
 func saveBaseline(dbPath string, data map[string]string) error {
-	// check db file exists
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		log.Default().Println("Database file does not exist, creating a new one.")
-		_, err := createDatabase(dbPath)
-		if err != nil {
-			return err
-		}
-	}
-	db, err := sql.Open("sqlite", dbPath)
+	db, err := createDatabase(dbPath)
 	if err != nil {
-		log.Default().Println("Failed to open database:", err)
+		log.Default().Println("Failed to open/create database:", err)
 		return err
 	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Remove all previous entries so deleted files don't linger
+	if _, err := tx.Exec("DELETE FROM baseline"); err != nil {
+		log.Default().Println("Failed to clear old baseline:", err)
+		return err
+	}
+
 	for path, hash := range data {
-		_, err := db.Exec("INSERT OR REPLACE INTO baseline (path, hash) VALUES (?, ?)", path, hash)
+		_, err := tx.Exec("INSERT INTO baseline (path, hash) VALUES (?, ?)", path, hash)
 		if err != nil {
-			log.Default().Println("Failed to insert/update baseline:", err)
+			log.Default().Println("Failed to insert baseline:", err)
 			return err
 		}
 	}
 
-	defer db.Close()
-	return nil
+	return tx.Commit()
 }
 
 func loadBaseline(dbPath string) (map[string]string, error) {

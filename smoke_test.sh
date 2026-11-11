@@ -27,4 +27,8 @@ echo "--- 2. Running clean check (--check) ---"
 
 echo "--- 3. Tampering with file and re-checking ---"
 echo "tampered!" >> "$DEMO_DIR/secret.txt"
-./bin/tripwire --check --config "$CONFIG"
+if ./bin/tripwire --check --config "$CONFIG"; then
+    echo "ERROR: Expected integrity check to fail with non-zero exit code"
+    exit 1
+fi
+echo "Smoke test passed!"

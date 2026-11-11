@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 )
 
 type Config struct {
@@ -16,7 +15,7 @@ func readConfig(data []byte) (Config, error) {
 	var config Config
 	err := json.Unmarshal(data, &config)
 	if err != nil {
-		log.Fatal(err)
+		return Config{}, err
 	}
 	return config, nil
 }

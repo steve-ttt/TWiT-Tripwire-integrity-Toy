@@ -9,3 +9,4 @@
 [x] Report a file as modified when its digest changes
 [x] Report a file as added or removed
 [ ] Report a permission or owner change
+[ ] Add concurancy go-routines to the hashing of directories/files
